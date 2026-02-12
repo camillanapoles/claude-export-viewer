@@ -1,0 +1,36 @@
+{% extends "base.html.j2" %}
+
+{% block title %}Claude Conversations{% endblock %}
+{% block css_path %}style.css{% endblock %}
+
+{% block content %}
+<div class="site-header">
+  <h1>Claude Conversations</h1>
+  <p class="subtitle">{{ conversations | length }} conversations</p>
+</div>
+
+<input type="text" class="search-box" id="search" placeholder="Filter conversations..." autocomplete="off">
+
+<ul class="conversation-list" id="conversation-list">
+  {% for convo in conversations %}
+  <li class="conversation-item" data-name="{{ convo.name | lower }}">
+    <a href="conversations/{{ convo.uuid }}.html">
+      <div class="conversation-name">{{ convo.name or "Untitled" }}</div>
+      <div class="conversation-meta">
+        {{ convo.created_at.strftime('%b %d, %Y') if convo.created_at else '' }}
+        &middot; {{ convo.chat_messages | length }} messages
+      </div>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+<script>
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.conversation-item').forEach(function(item) {
+    item.style.display = item.dataset.name.includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html.j2" %}
+
+{% block title %}{{ conversation.name or "Untitled" }} — Claude{% endblock %}
+{% block css_path %}../style.css{% endblock %}
+
+{% block content %}
+<a href="../index.html" class="back-link">&larr; All conversations</a>
+
+<div class="convo-header">
+  <h1>{{ conversation.name or "Untitled" }}</h1>
+  <div class="meta">
+    {{ conversation.created_at.strftime('%b %d, %Y at %I:%M %p') if conversation.created_at else '' }}
+    &middot; {{ conversation.chat_messages | length }} messages
+  </div>
+</div>
+
+<div class="messages">
+  {% for message_html in rendered_messages %}
+  {{ message_html | safe }}
+  {% endfor %}
+</div>
+{% endblock %}

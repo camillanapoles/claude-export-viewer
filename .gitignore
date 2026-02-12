@@ -1,0 +1,12 @@
+.claude/settings.local.json
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+.playwright-mcp
+
+__pycache__
+
+exports
+exporter
