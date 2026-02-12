@@ -13,6 +13,12 @@ dependencies = [
 [project.scripts]
 claude-export-viewer = "claude_export_viewer.cli:main"
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

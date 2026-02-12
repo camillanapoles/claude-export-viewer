@@ -2,6 +2,7 @@ from pathlib import Path
 
 from claude_export_viewer.html_builder import build_site
 from claude_export_viewer.models import (
+    AccountRef,
     ChatMessage,
     Conversation,
     ExportData,
@@ -44,11 +45,13 @@ def test_build_site_creates_output(tmp_path: Path) -> None:
 
 def test_build_site_index_content(tmp_path: Path) -> None:
     data = ExportData(
+        users=[User(uuid="u1", full_name="Alice Smith", email_address="alice@test.com")],
         conversations=[
             Conversation(
                 uuid="c1",
                 name="First Chat",
                 created_at="2026-01-15T00:00:00Z",
+                account=AccountRef(uuid="u1"),
                 chat_messages=[
                     ChatMessage(uuid="m1", sender="human", content=[TextContent(text="Hi")]),
                 ],
@@ -71,6 +74,11 @@ def test_build_site_index_content(tmp_path: Path) -> None:
     assert "2 conversations" in index_html
     # First Chat should appear before Second Chat (newer first)
     assert index_html.index("First Chat") < index_html.index("Second Chat")
+    # User name should appear for conversation with account
+    assert "Alice Smith" in index_html
+    # Filter controls should be present
+    assert 'id="filter-user"' in index_html
+    assert 'id="sort-by"' in index_html
 
 
 def test_build_site_conversation_content(tmp_path: Path) -> None:

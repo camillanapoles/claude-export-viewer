@@ -25,6 +25,13 @@ def build_site(data: ExportData, output_dir: Path) -> None:
     # Copy static assets
     shutil.copy(_PACKAGE_DIR / "static" / "style.css", output_dir / "style.css")
 
+    # Build lookup maps for users and projects
+    user_map: dict[str, str] = {u.uuid: u.full_name for u in data.users}
+    all_projects = {p.uuid: p.name for p in data.projects}
+    # Only include projects actually referenced by conversations
+    referenced = {c.project_uuid for c in data.conversations if c.project_uuid}
+    project_map: dict[str, str] = {k: v for k, v in all_projects.items() if k in referenced}
+
     # Sort conversations by date (newest first)
     conversations = sorted(
         data.conversations,
@@ -34,7 +41,11 @@ def build_site(data: ExportData, output_dir: Path) -> None:
 
     # Render index
     index_template = env.get_template("index.html.j2")
-    index_html = index_template.render(conversations=conversations)
+    index_html = index_template.render(
+        conversations=conversations,
+        user_map=user_map,
+        project_map=project_map,
+    )
     (output_dir / "index.html").write_text(index_html, encoding="utf-8")
 
     # Render each conversation

@@ -9,16 +9,53 @@
   <p class="subtitle">{{ conversations | length }} conversations</p>
 </div>
 
-<input type="text" class="search-box" id="search" placeholder="Filter conversations..." autocomplete="off">
+<div class="filter-bar">
+  <input type="text" class="search-box" id="search" placeholder="Filter conversations..." autocomplete="off">
+  <div class="filter-controls">
+    <select id="filter-user" class="filter-select">
+      <option value="">All users</option>
+      {% for uuid, name in user_map | dictsort(by='value') %}
+      <option value="{{ uuid }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+    {% if project_map %}
+    <select id="filter-project" class="filter-select">
+      <option value="">All projects</option>
+      {% for uuid, name in project_map | dictsort(by='value') %}
+      <option value="{{ uuid }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    <select id="sort-by" class="filter-select">
+      <option value="date-desc">Date (newest)</option>
+      <option value="date-asc">Date (oldest)</option>
+      <option value="name-asc">Name (A-Z)</option>
+      <option value="name-desc">Name (Z-A)</option>
+      <option value="messages-desc">Messages (most)</option>
+      <option value="messages-asc">Messages (least)</option>
+    </select>
+  </div>
+</div>
 
 <ul class="conversation-list" id="conversation-list">
   {% for convo in conversations %}
-  <li class="conversation-item" data-name="{{ convo.name | lower }}">
+  <li class="conversation-item"
+      data-name="{{ convo.name | lower }}"
+      data-user="{{ convo.account.uuid if convo.account else '' }}"
+      data-project="{{ convo.project_uuid or '' }}"
+      data-date="{{ convo.created_at.isoformat() if convo.created_at else '' }}"
+      data-messages="{{ convo.chat_messages | length }}">
     <a href="conversations/{{ convo.uuid }}.html">
       <div class="conversation-name">{{ convo.name or "Untitled" }}</div>
       <div class="conversation-meta">
         {{ convo.created_at.strftime('%b %d, %Y') if convo.created_at else '' }}
         &middot; {{ convo.chat_messages | length }} messages
+        {%- if convo.account and user_map.get(convo.account.uuid) %}
+        &middot; {{ user_map[convo.account.uuid] }}
+        {%- endif %}
+        {%- if convo.project_uuid and project_map.get(convo.project_uuid) %}
+        &middot; {{ project_map[convo.project_uuid] }}
+        {%- endif %}
       </div>
     </a>
   </li>
@@ -26,11 +63,54 @@
 </ul>
 
 <script>
-document.getElementById('search').addEventListener('input', function() {
-  const q = this.value.toLowerCase();
-  document.querySelectorAll('.conversation-item').forEach(function(item) {
-    item.style.display = item.dataset.name.includes(q) ? '' : 'none';
-  });
-});
+(function() {
+  var searchInput = document.getElementById('search');
+  var userFilter = document.getElementById('filter-user');
+  var projectFilter = document.getElementById('filter-project');
+  var sortSelect = document.getElementById('sort-by');
+  var list = document.getElementById('conversation-list');
+
+  function applyFilters() {
+    var q = searchInput.value.toLowerCase();
+    var user = userFilter ? userFilter.value : '';
+    var project = projectFilter ? projectFilter.value : '';
+    var items = list.querySelectorAll('.conversation-item');
+    items.forEach(function(item) {
+      var matchName = !q || item.dataset.name.includes(q);
+      var matchUser = !user || item.dataset.user === user;
+      var matchProject = !project || item.dataset.project === project;
+      item.style.display = (matchName && matchUser && matchProject) ? '' : 'none';
+    });
+  }
+
+  function applySort() {
+    var items = Array.from(list.querySelectorAll('.conversation-item'));
+    var sortVal = sortSelect.value;
+    items.sort(function(a, b) {
+      switch (sortVal) {
+        case 'date-desc':
+          return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+        case 'date-asc':
+          return (a.dataset.date || '').localeCompare(b.dataset.date || '');
+        case 'name-asc':
+          return (a.dataset.name || '').localeCompare(b.dataset.name || '');
+        case 'name-desc':
+          return (b.dataset.name || '').localeCompare(a.dataset.name || '');
+        case 'messages-desc':
+          return parseInt(b.dataset.messages || '0') - parseInt(a.dataset.messages || '0');
+        case 'messages-asc':
+          return parseInt(a.dataset.messages || '0') - parseInt(b.dataset.messages || '0');
+        default:
+          return 0;
+      }
+    });
+    items.forEach(function(item) { list.appendChild(item); });
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  if (userFilter) userFilter.addEventListener('change', applyFilters);
+  if (projectFilter) projectFilter.addEventListener('change', applyFilters);
+  sortSelect.addEventListener('change', function() { applySort(); applyFilters(); });
+})();
 </script>
 {% endblock %}

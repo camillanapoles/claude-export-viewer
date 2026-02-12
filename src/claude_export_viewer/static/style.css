@@ -79,6 +79,19 @@ a:hover { text-decoration: underline; }
   font-size: 0.95rem;
 }
 
+.filter-bar {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .search-box {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -87,11 +100,28 @@ a:hover { text-decoration: underline; }
   background: var(--surface);
   color: var(--text);
   font-size: 1rem;
-  margin: 1rem 0;
   outline: none;
 }
 
 .search-box:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(201, 100, 66, 0.15);
+}
+
+.filter-select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.filter-select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(201, 100, 66, 0.15);
 }

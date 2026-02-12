@@ -161,6 +161,7 @@ class Conversation(BaseModel):
     created_at: datetime | None = None
     updated_at: datetime | None = None
     account: AccountRef | None = None
+    project_uuid: str | None = None
     chat_messages: list[ChatMessage] = []
 
 

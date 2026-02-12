@@ -216,6 +216,23 @@ def test_conversation_parsing() -> None:
     assert convo.chat_messages[1].sender == "assistant"
 
 
+def test_conversation_with_project_uuid() -> None:
+    data = {
+        "uuid": "conv-2",
+        "name": "Project Chat",
+        "account": {"uuid": "acct-1"},
+        "project_uuid": "proj-1",
+        "chat_messages": [],
+    }
+    convo = Conversation.model_validate(data)
+    assert convo.project_uuid == "proj-1"
+
+
+def test_conversation_without_project_uuid() -> None:
+    convo = Conversation(uuid="conv-3", name="No Project")
+    assert convo.project_uuid is None
+
+
 def test_export_data() -> None:
     data = ExportData(
         users=[User(uuid="u1", full_name="Test", email_address="t@t.com")],
