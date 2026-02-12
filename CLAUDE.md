@@ -10,7 +10,7 @@ A Python CLI tool that converts a Claude.ai data export ZIP into a browsable sta
 
 ```bash
 # Run against a real export
-uv run claude-export-viewer exports/data-*.zip -o site/
+uv run claude-export-viewer path/to/export.zip -o path/to/output/
 
 # Tests
 uv run pytest tests/ -v
