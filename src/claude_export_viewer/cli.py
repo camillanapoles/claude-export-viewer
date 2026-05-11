@@ -4,8 +4,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from .html_builder import build_site
-from .loader import load_export
+from claude_export_viewer.html_builder import build_site
+from claude_export_viewer.loader import load_export
 
 
 def main() -> None:

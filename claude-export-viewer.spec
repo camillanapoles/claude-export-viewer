@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_data_files
 
-project_root = Path(__file__).resolve().parent
+project_root = Path(SPECPATH)
 datas = collect_data_files(
     "claude_export_viewer",
     includes=["templates/*.j2", "static/*.css"],

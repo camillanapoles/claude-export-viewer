@@ -12,6 +12,9 @@ jobs:
   build:
     name: Build ${{ matrix.label }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -19,7 +22,7 @@ jobs:
           - os: ubuntu-latest
             label: linux-x64
           - os: macos-latest
-            label: macos-universal
+            label: macos
           - os: windows-latest
             label: windows-x64
 
@@ -39,7 +42,7 @@ jobs:
         run: uv sync --group dev
 
       - name: Build executable
-        run: uv run pyinstaller claude-export-viewer.spec --clean
+        run: uv run pyinstaller claude-export-viewer.spec --clean --noconfirm
 
       - name: Smoke test executable
         run: |

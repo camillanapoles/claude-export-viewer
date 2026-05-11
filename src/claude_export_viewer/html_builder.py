@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import shutil
 from contextlib import ExitStack
 from importlib.resources import as_file, files
-import shutil
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
