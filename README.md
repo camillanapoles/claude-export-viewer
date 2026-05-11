@@ -24,8 +24,10 @@ This tool takes that ZIP and generates a self-contained HTML site you can open d
 ```bash
 git clone https://github.com/lordjabez/claude-export-viewer.git
 cd claude-export-viewer
-uv sync
+uv sync --group dev
 ```
+
+If you only want the Python package locally, `uv sync` is enough. Use `uv sync --group dev` when you need the full development toolchain, including PyInstaller for release builds.
 
 ## Usage
 
@@ -57,4 +59,13 @@ uv run ruff format --check src/ tests/
 
 # Auto-fix lint issues
 uv run ruff check --fix src/ tests/ && uv run ruff format src/ tests/
+
+# Build the standalone executable locally
+uv run pyinstaller claude-export-viewer.spec --clean
 ```
+
+## Prebuilt executables
+
+Tagged releases now build standalone executables with PyInstaller for Linux, macOS, and Windows through GitHub Actions. Each release uploads the packaged binaries as workflow artifacts and attaches them to the corresponding GitHub Release.
+
+Use the Python installation flow if you want to run or develop the project inside a normal Python environment. Use the prebuilt executable when you want a self-contained CLI without installing Python or the project dependencies yourself.

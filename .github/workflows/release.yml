@@ -1,0 +1,141 @@
+name: Release Executable
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x64
+          - os: macos-latest
+            label: macos-universal
+          - os: windows-latest
+            label: windows-x64
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Build executable
+        run: uv run pyinstaller claude-export-viewer.spec --clean
+
+      - name: Smoke test executable
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          import zipfile
+          from pathlib import Path
+
+          temp_dir = Path(os.environ["RUNNER_TEMP"])
+          zip_path = temp_dir / "sample-export.zip"
+          with zipfile.ZipFile(zip_path, "w") as zf:
+              zf.writestr("users.json", json.dumps([]))
+              zf.writestr("projects.json", json.dumps([]))
+              zf.writestr("memories.json", json.dumps([]))
+              zf.writestr(
+                  "conversations.json",
+                  json.dumps(
+                      [
+                          {
+                              "uuid": "conv-1",
+                              "name": "Release Smoke Test",
+                              "created_at": "2026-01-01T00:00:00Z",
+                              "updated_at": "2026-01-01T00:00:00Z",
+                              "chat_messages": [
+                                  {
+                                      "uuid": "msg-1",
+                                      "text": "hello",
+                                      "content": [{"type": "text", "text": "hello"}],
+                                      "sender": "human",
+                                      "attachments": [],
+                                      "files": [],
+                                  }
+                              ],
+                          }
+                      ]
+                  ),
+              )
+
+          executable = Path("dist") / "claude-export-viewer" / (
+              "claude-export-viewer.exe" if sys.platform == "win32" else "claude-export-viewer"
+          )
+          output_dir = temp_dir / "site"
+          subprocess.run([str(executable), str(zip_path), "-o", str(output_dir)], check=True)
+          assert (output_dir / "index.html").exists()
+          assert (output_dir / "conversations" / "conv-1.html").exists()
+          assert (output_dir / "style.css").exists()
+          PY
+
+      - name: Archive executable
+        run: |
+          python - <<'PY'
+          import os
+          import shutil
+          from pathlib import Path
+
+          label = os.environ["RELEASE_LABEL"]
+          release_dir = Path("release")
+          release_dir.mkdir(exist_ok=True)
+          archive = shutil.make_archive(
+              str(release_dir / f"claude-export-viewer-{label}"),
+              "zip",
+              root_dir="dist",
+              base_dir="claude-export-viewer",
+          )
+          print(f"Created {archive}")
+          PY
+        env:
+          RELEASE_LABEL: ${{ matrix.label }}
+
+      - name: Upload executable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.label }}
+          path: release/claude-export-viewer-${{ matrix.label }}.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish release assets
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download packaged executables
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.zip
+          generate_release_notes: true
